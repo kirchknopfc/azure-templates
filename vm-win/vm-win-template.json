@@ -309,7 +309,10 @@
                     ]
                 },
                 "diagnosticsProfile": {
-                    "bootDiagnostics": "[variables('bootDiagnostics')]"
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https://', parameters('diagnosticStorageAccount'), '.blob.core.windows.net/')]"
+                    }
                 }
             },
             "identity": {
