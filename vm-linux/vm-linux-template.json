@@ -128,7 +128,7 @@
         },
         "deployPublicIpAddress": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "allowedValues": [
                 true,
                 false
@@ -139,21 +139,21 @@
         },
         "networkResourceGroup": {
             "type": "string",
-            "defaultValue": "Network",
+            "defaultValue": "",
             "metadata": {
                 "description": "The Name of the resource group for shared network resources."
             }
         },
         "vnetName": {
             "type": "string",
-            "defaultValue": "EUWestVNet",
+            "defaultValue": "",
             "metadata": {
                 "description": "The name of the virtual network."
             }
         },
         "subnetName": {
             "type": "string",
-            "defaultValue": "Test1Subnet",
+            "defaultValue": "",
             "metadata": {
                 "description": "The name of the subnet in the virtual network."
             }
@@ -368,7 +368,7 @@
             ]
         },
         {
-            "condition": false,
+            "condition": "[variables('postDeployment')]",
             "comments": "Custom deployment script for post-deployment",
             "name": "[concat(parameters('virtualMachineName'), '/PostDeployment')]",
             "type": "Microsoft.Compute/virtualMachines/extensions",
