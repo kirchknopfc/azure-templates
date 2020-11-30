@@ -28,7 +28,7 @@
                 "description": "The virtual machine Image."
             }
         },
-        "primaryIPAddress": {
+        "virtualMachineIP": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
@@ -227,7 +227,7 @@
                         "primary": true,
                         "privateIPAddressVersion": "IPv4",
                         "privateIPAllocationMethod": "Static",
-                        "privateIPAddress": "[parameters('primaryIPAddress')]",
+                        "privateIPAddress": "[parameters('virtualMachineIP')]",
                         "subnet": {
                             "id": "[variables('subnetRef')]"
                         },
