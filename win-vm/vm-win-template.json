@@ -19,9 +19,9 @@
         "imageReference": {
             "type": "object",
             "defaultValue": {
-                "publisher": "OpenLogic",
-                "offer": "CentOS",
-                "sku": "8_2",
+                "publisher": "MicrosoftWindowsServer",
+                "offer": "WindowsServer",
+                "sku": "2019-Datacenter",
                 "version": "latest"
             },
             "metadata": {
@@ -29,15 +29,14 @@
             }
         },
         "primaryIPAddress": {
-            "type": "string",
             "defaultValue": "",
+            "type": "string",
             "metadata": {
                 "description": "The primary ip address of the virtual machine."
             }
         },
         "adminUsername": {
-            "type": "string",
-            "defaultValue": "adm-atos",
+            "type": "securestring",
             "metadata": {
                 "description": "The admin username for the virtual machine."
             }
@@ -47,10 +46,6 @@
             "metadata": {
                 "description": "The admin password for the virtual machine."
             }
-        },
-        "osDiskSizeGb": {
-            "type": "int",
-            "defaultValue": 64
         },
         "osDiskType": {
             "type": "string",
@@ -69,23 +64,23 @@
                 "description": "The data disks for the virtual machine."
             }
         },
-        "avSetName": {
+        "fileShareStorageAccount": {
             "type": "string",
-            "defaultValue": "",
+            "defaultValue": "zenuat1sapstor01",
             "metadata": {
-                "description": "The name of the Availability Set for the virtual machine."
+                "description": "The name of the Azure storage account for shared FileShares."
             }
         },
         "diagnosticStorageAccount": {
             "type": "string",
-            "defaultValue": "",
+            "defaultValue": "zenuat1vmdiagne01",
             "metadata": {
                 "description": "The name of the diagnostic StorageAccount."
             }
         },
         "enableBackup": {
             "type": "bool",
-            "defaultValue": false,
+            "defaultValue": true,
             "allowedValues": [
                 true,
                 false
@@ -96,21 +91,21 @@
         },
         "recoveryServiceVaultName": {
             "type": "string",
-            "defaultValue": "",
+            "defaultValue": "ZEN-UAT1-SAP-NE-RSV01",
             "metadata": {
                 "description": "The name of the Azure RecoveryServiceVault for Backup."
             }
         },
         "backupPolicyName": {
             "type": "string",
-            "defaultValue": "Default",
+            "defaultValue": "ZEN-DailyVMBackup",
             "metadata": {
                 "description": "The name of the Azure Backup Policy for VMs."
             }
         },
         "enableMonitoring": {
             "type": "bool",
-            "defaultValue": false,
+            "defaultValue": true,
             "allowedValues": [
                 true,
                 false
@@ -135,7 +130,7 @@
         },
         "deployPublicIpAddress": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "allowedValues": [
                 true,
                 false
@@ -146,21 +141,21 @@
         },
         "networkResourceGroup": {
             "type": "string",
-            "defaultValue": "Network",
+            "defaultValue": "",
             "metadata": {
                 "description": "The Name of the resource group for shared network resources."
             }
         },
         "vnetName": {
             "type": "string",
-            "defaultValue": "EUWestVNet",
+            "defaultValue": "",
             "metadata": {
                 "description": "The name of the virtual network."
             }
         },
         "subnetName": {
             "type": "string",
-            "defaultValue": "Test1Subnet",
+            "defaultValue": "",
             "metadata": {
                 "description": "The name of the subnet in the virtual network."
             }
@@ -177,20 +172,6 @@
             "defaultValue": "",
             "metadata": {
                 "description": "The storage account key for the post deployment script."
-            }
-        },
-        "deployFiles": {
-            "type": "array",
-            "defaultValue": [],
-            "metadata": {
-                "description": "The post deployment script execute on vm."
-            }
-        },
-        "deployCommandToExecute": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "The post deployment command to execute on vm."
             }
         },
         "tags": {
@@ -227,21 +208,6 @@
         "publicIPAddress": {
             "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIpAddressName'))]"
         },
-        "ipConfig": [
-                {
-                    "name": "ipconfig1",
-                    "properties": {
-                        "primary": true,
-                        "privateIPAddressVersion": "IPv4",
-                        "privateIPAllocationMethod": "Dynamic",
-                        "privateIPAddress": "[parameters('primaryIPAddress')]",
-                        "subnet": {
-                            "id": "[variables('subnetRef')]"
-                        },
-                        "publicIPAddress": "[if(parameters('deployPublicIpAddress'),variables('publicIPAddress'), json('null'))]"
-                    }
-                }
-        ],
         "bootDiagnosticsEnabled": {
             "enabled": false,
             "storageUri": null
@@ -251,10 +217,11 @@
             "storageUri": "[concat('https://', parameters('diagnosticStorageAccount'), '.blob.core.windows.net/')]"
         },
         "bootDiagnostics": "[if(empty(parameters('diagnosticStorageAccount')), variables('bootDiagnosticsDisable'), variables('bootDiagnosticsEnabled'))]",
-        "aadLoginExtensionName": "AADLoginForLinux",
-        "trueValue": true,
-        "falseValue": false,
-        "postDeployment": "[if(empty(parameters('deployCommandToExecute')), variables('falseValue'), variables('trueValue'))]",
+        "vmPostDeployScript": "jumpPostDeploymentScript.ps1",
+        "vmPostDeployFiles": [
+            "[concat('https://', parameters('deployScriptStorage'), '.blob.core.windows.net/zen-deploy/', variables('vmPostDeployScript'))]",
+            "[concat('https://', parameters('deployScriptStorage'), '.blob.core.windows.net/zen-deploy/PsExec.exe')]"
+        ],
         "backupName": "[concat(parameters('recoveryServiceVaultName'),'/Azure/','iaasvmcontainer;iaasvmcontainerv2;', resourceGroup().name, ';', parameters('virtualMachineName'), '/', 'vm;iaasvmcontainerv2;', resourceGroup().name, ';', parameters('virtualMachineName'))]"
     },
     "resources": [
@@ -281,12 +248,26 @@
                 "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIpAddressName'))]"
             ],
             "properties": {
-                 "ipConfigurations": "[variables('ipConfig')]",
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "privateIPAddress": "[parameters('primaryIPAddress')]",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "publicIPAddress": "[if(parameters('deployPublicIpAddress'),variables('publicIPAddress'), json('null'))]"
+                        }
+                    }
+                ],
                 "enableAcceleratedNetworking": "[variables('enableAcceleratedNetworking')]"
             }
         },
         {
-            "comments": "Virtual Maschine",
+            "comments": "virtual maschine",
             "name": "[parameters('virtualMachineName')]",
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2019-03-01",
@@ -307,15 +288,18 @@
                         "managedDisk": {
                             "storageAccountType": "[parameters('osDiskType')]"
                         },
-                        "caching": "ReadWrite",
-                        "diskSizeGB": "[parameters('osDiskSizeGB')]"
+                        "caching": "ReadWrite"
                     },
                     "dataDisks": "[parameters('dataDisks')]"
                 },
                 "osProfile": {
                     "computerName": "[parameters('virtualMachineName')]",
                     "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    }
                 },
                 "networkProfile": {
                     "networkInterfaces": [
@@ -344,8 +328,8 @@
             ],
             "properties": {
                 "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-                "type": "OmsAgentForLinux",
-                "typeHandlerVersion": "1.7",
+                "type": "MicrosoftMonitoringAgent",
+                "typeHandlerVersion": "1.0",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
                     "workspaceId": "[parameters('logAnalyticsWorkspaceId')]"
@@ -356,23 +340,21 @@
             }
         },
         {
-            "condition": false,
-            "name": "[concat(parameters('virtualMachineName'),'/', variables('aadLoginExtensionName'))]",
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "apiVersion": "2018-10-01",
-            "location": "[parameters('location')]",
-            "properties": {
-                "publisher": "Microsoft.Azure.ActiveDirectory.LinuxSSH",
-                "type": "AADLoginForLinux",
-                "typeHandlerVersion": "1.0",
-                "autoUpgradeMinorVersion": true
-            },
+            "condition": "[parameters('enableBackup')]",
+            "comments": "Enable Azure Backup for virtual maschine",
+            "name": "[variables('backupName')]",
+            "type": "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems",
+            "apiVersion": "2016-12-01",
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
-            ]
+            ],
+            "properties": {
+                "protectedItemType": "Microsoft.ClassicCompute/virtualMachines",
+                "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/backupPolicies', resourceGroup().name, parameters('backupPolicyName'))]",
+                "sourceResourceId": "[resourceId('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+            }
         },
         {
-            "condition": false,
             "comments": "Custom deployment script for post-deployment",
             "name": "[concat(parameters('virtualMachineName'), '/PostDeployment')]",
             "type": "Microsoft.Compute/virtualMachines/extensions",
@@ -383,18 +365,36 @@
                 "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachineName'))]"
             ],
             "properties": {
-                "publisher": "Microsoft.Azure.Extensions",
-                "type": "CustomScript",
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": "[variables('vmPostDeployFiles')]"
+                },
+                "protectedSettings": {
+                    "commandToExecute": "[concat('powershell -ExecutionPolicy Bypass -File ./', variables('vmPostDeployScript'), ' ', parameters('fileShareStorageAccount'), ' ', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('fileShareStorageAccount')), '2019-04-01').keys[0].value)]",
+                    "storageAccountName": "[parameters('deployScriptStorage')]",
+                    "storageAccountKey": "[parameters('deployScriptStorageKey')]"
+                }
+            }
+        },
+        {
+            "name": "[concat(parameters('virtualMachineName'),'/BGInfo')]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2015-06-15",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "BGInfo",
                 "typeHandlerVersion": "2.1",
                 "autoUpgradeMinorVersion": true,
                 "settings": {
-                    "skipDos2Unix": false
-                },
-                "protectedSettings": {
-                    "fileUris": "[parameters('deployFiles')]",
-                    "commandToExecute": "[parameters('deployCommandToExecute')]",
-                    "storageAccountName": "[parameters('deployScriptStorage')]",
-                    "storageAccountKey": "[parameters('deployScriptStorageKey')]"
+                    "Properties": [
+                    ]
                 }
             }
         }
