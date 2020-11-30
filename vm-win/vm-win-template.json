@@ -66,14 +66,14 @@
         },
         "fileShareStorageAccount": {
             "type": "string",
-            "defaultValue": "zenuat1sapstor01",
+            "defaultValue": "",
             "metadata": {
                 "description": "The name of the Azure storage account for shared FileShares."
             }
         },
         "diagnosticStorageAccount": {
             "type": "string",
-            "defaultValue": "zenuat1vmdiagne01",
+            "defaultValue": "",
             "metadata": {
                 "description": "The name of the diagnostic StorageAccount."
             }
@@ -91,14 +91,14 @@
         },
         "recoveryServiceVaultName": {
             "type": "string",
-            "defaultValue": "ZEN-UAT1-SAP-NE-RSV01",
+            "defaultValue": "",
             "metadata": {
                 "description": "The name of the Azure RecoveryServiceVault for Backup."
             }
         },
         "backupPolicyName": {
             "type": "string",
-            "defaultValue": "ZEN-DailyVMBackup",
+            "defaultValue": "",
             "metadata": {
                 "description": "The name of the Azure Backup Policy for VMs."
             }
