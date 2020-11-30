@@ -348,21 +348,6 @@
             }
         },
         {
-            "condition": "[parameters('enableBackup')]",
-            "comments": "Enable Azure Backup for virtual maschine",
-            "name": "[variables('backupName')]",
-            "type": "Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems",
-            "apiVersion": "2016-12-01",
-            "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
-            ],
-            "properties": {
-                "protectedItemType": "Microsoft.ClassicCompute/virtualMachines",
-                "policyId": "[resourceId('Microsoft.RecoveryServices/vaults/backupPolicies', resourceGroup().name, parameters('backupPolicyName'))]",
-                "sourceResourceId": "[resourceId('Microsoft.Compute/virtualMachines/', parameters('virtualMachineName'))]"
-            }
-        },
-        {
             "comments": "Custom deployment script for post-deployment",
             "name": "[concat(parameters('virtualMachineName'), '/PostDeployment')]",
             "type": "Microsoft.Compute/virtualMachines/extensions",
