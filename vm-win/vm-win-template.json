@@ -29,14 +29,15 @@
             }
         },
         "primaryIPAddress": {
-            "defaultValue": "",
             "type": "string",
+            "defaultValue": "",
             "metadata": {
                 "description": "The primary ip address of the virtual machine."
             }
         },
         "adminUsername": {
-            "type": "securestring",
+            "type": "string",
+            "defaultValue": "adminuser",
             "metadata": {
                 "description": "The admin username for the virtual machine."
             }
@@ -46,6 +47,10 @@
             "metadata": {
                 "description": "The admin password for the virtual machine."
             }
+        },
+        "osDiskSizeGb": {
+            "type": "int",
+            "defaultValue": 64
         },
         "osDiskType": {
             "type": "string",
@@ -80,7 +85,7 @@
         },
         "enableBackup": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "allowedValues": [
                 true,
                 false
@@ -98,14 +103,14 @@
         },
         "backupPolicyName": {
             "type": "string",
-            "defaultValue": "",
+            "defaultValue": "Default",
             "metadata": {
                 "description": "The name of the Azure Backup Policy for VMs."
             }
         },
         "enableMonitoring": {
             "type": "bool",
-            "defaultValue": true,
+            "defaultValue": false,
             "allowedValues": [
                 true,
                 false
@@ -254,7 +259,7 @@
                         "properties": {
                             "primary": true,
                             "privateIPAddressVersion": "IPv4",
-                            "privateIPAllocationMethod": "Dynamic",
+                            "privateIPAllocationMethod": "Static",
                             "privateIPAddress": "[parameters('primaryIPAddress')]",
                             "subnet": {
                                 "id": "[variables('subnetRef')]"

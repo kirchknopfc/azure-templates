@@ -37,7 +37,7 @@
         },
         "adminUsername": {
             "type": "string",
-            "defaultValue": "adm-atos",
+            "defaultValue": "adminuser",
             "metadata": {
                 "description": "The admin username for the virtual machine."
             }
@@ -67,13 +67,6 @@
             ],
             "metadata": {
                 "description": "The data disks for the virtual machine."
-            }
-        },
-        "avSetName": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "The name of the Availability Set for the virtual machine."
             }
         },
         "diagnosticStorageAccount": {
@@ -233,7 +226,7 @@
                     "properties": {
                         "primary": true,
                         "privateIPAddressVersion": "IPv4",
-                        "privateIPAllocationMethod": "Dynamic",
+                        "privateIPAllocationMethod": "Static",
                         "privateIPAddress": "[parameters('primaryIPAddress')]",
                         "subnet": {
                             "id": "[variables('subnetRef')]"
